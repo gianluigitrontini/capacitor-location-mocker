@@ -1,0 +1,7 @@
+{
+  "name": "test-location-mocker",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
