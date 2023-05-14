@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Platform } from '@ionic/angular';
-import Echo from 'plugins/location-mocker/LocationMocker';
+import MockLocation from 'plugins/location-mocker/LocationMocker';
 
 
 @Component({
@@ -15,7 +15,7 @@ export class AppComponent implements OnInit {
 
   async ngOnInit() {
     await this.platform.ready()
-    const { value } = await Echo.echo({ value: 'Hello World!' });
+    const value = await MockLocation.setMockLocation({ lat: 50, lon: 50 });
     console.log(value);
   }
 }
