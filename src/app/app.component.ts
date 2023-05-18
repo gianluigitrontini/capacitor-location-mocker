@@ -3,7 +3,7 @@ import { tick } from '@angular/core/testing';
 import { Geolocation } from '@capacitor/geolocation';
 import { Platform } from '@ionic/angular';
 import MockLocation from 'custom-plugins/location-mocker/locationMocker';
-import { BehaviorSubject, Subject, concatMap, delay, from, interval, map, mapTo, take, tap, timer, zip } from 'rxjs';
+import { BehaviorSubject, Subject, concatMap, delay, from, interval, map, mapTo, mergeMap, take, tap, timer, zip } from 'rxjs';
 
 
 @Component({
@@ -41,27 +41,42 @@ export class AppComponent implements OnInit {
       { lat: -10, lon: 0 },
       { lat: 0, lon: -10 }
     ];
-
     setInterval(() => {
-      from(offsets)
-        .pipe(
-          concatMap((offset) =>
-            timer(2000).pipe(
-              concatMap(() => {
-                const { lat: newOffsetLat, lon: newOffsetLon } = this.generaCoordinateConOffset(coordinateAttuali, offset);
 
-                return MockLocation.setMockLocation({
-                  lat: newOffsetLat,
-                  lon: newOffsetLon
-                });
-              })
-            )
-          )
-        )
-        .subscribe(() => {
-          console.log('Function executed with delay');
-        });
+      from(offsets).pipe(
+        concatMap(offset => timer(2000).pipe(
+          concatMap(() => {
+            console.log('Eseguo', offset);
+
+            const { lat: newOffsetLat, lon: newOffsetLon } = this.generaCoordinateConOffset(coordinateAttuali, offset);
+
+            return MockLocation.setMockLocation({
+              lat: newOffsetLat,
+              lon: newOffsetLon
+            });
+          })
+        ))
+      ).subscribe(() => { });
     }, 8000)
+
+    // setInterval(() => {
+    //   from(offsets)
+    //     .pipe(
+    //       concatMap((offset) =>
+    //         timer(2000).pipe(
+    //           concatMap(() => {
+    //             const { lat: newOffsetLat, lon: newOffsetLon } = this.generaCoordinateConOffset(coordinateAttuali, offset);
+
+    //             return MockLocation.setMockLocation({
+    //               lat: newOffsetLat,
+    //               lon: newOffsetLon
+    //             });
+    //           })
+    //         )
+    //       )
+    //     )
+    //     .subscribe(() => { });
+    // }, 8000)
 
 
     // const testSetInterval = async () => {
