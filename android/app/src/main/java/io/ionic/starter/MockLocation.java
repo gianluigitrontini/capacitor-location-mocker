@@ -31,8 +31,8 @@ public class MockLocation {
     if (currentRetryCount < maxRetryCount) {
       try {
         shutdown();
-        lm.addTestProvider(LocationManager.GPS_PROVIDER, false, false, false, false, false, true, true, powerUsage, accuracy);
-        //        lm.setTestProviderEnabled(providerName, true);
+        lm.addTestProvider(providerName, false, false, false, false, false, true, true, powerUsage, accuracy);
+        lm.setTestProviderEnabled(providerName, true);
       } catch (Exception e) {
         Log.e("Error", "Exception");
         initializePlugin(lm, powerUsage, accuracy, maxRetryCount, (currentRetryCount + 1));

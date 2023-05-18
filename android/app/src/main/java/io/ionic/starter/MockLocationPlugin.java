@@ -4,8 +4,6 @@ import android.Manifest;
 import android.location.LocationManager;
 import android.location.Location;
 
-import com.capacitorjs.plugins.geolocation.Geolocation;
-import com.capacitorjs.plugins.geolocation.GeolocationPlugin;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -22,10 +20,12 @@ import android.util.Log;
 @CapacitorPlugin(name = "MockLocation")
 public class MockLocationPlugin extends Plugin {
 
-  private MockLocation implementation;
+  private MockLocation implementationGps;
+  private MockLocation implementationNetwork;
 
   public void load() {
-    implementation = new MockLocation(LocationManager.GPS_PROVIDER, getContext());
+    implementationGps = new MockLocation(LocationManager.GPS_PROVIDER, getContext());
+    implementationNetwork = new MockLocation(LocationManager.NETWORK_PROVIDER, getContext());
   }
 
   /**
@@ -36,11 +36,9 @@ public class MockLocationPlugin extends Plugin {
     Double lat = call.getDouble("lat");
     Double lng = call.getDouble("lon");
 
-    Log.d("Lat", String.valueOf(lat));
-
     try {
-      //        mockNetwork.pushLocation(lat, lng);
-      //      implementation.pushCoordsToMock(lat, lng);
+      implementationGps.pushCoordsToMock(lat, lng);
+      implementationGps.pushCoordsToMock(lat, lng);
     } catch (Exception e) {
       e.printStackTrace();
       return;
