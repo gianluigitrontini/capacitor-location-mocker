@@ -38,16 +38,37 @@ public class MockLocationPlugin extends Plugin {
 
     try {
       implementationGps.pushCoordsToMock(lat, lng);
-      implementationGps.pushCoordsToMock(lat, lng);
+      implementationNetwork.pushCoordsToMock(lat, lng);
     } catch (Exception e) {
       e.printStackTrace();
       return;
     }
 
     JSObject ret = new JSObject();
-    Log.d("Done", "Done!");
     ret.put("data", "Location pushed");
     call.resolve(ret);
+  }
+
+  /**
+   * Rimuove il test provider
+   */
+  @PluginMethod()
+  public void removeTestProvider(PluginCall call) {
+    try {
+      implementationNetwork.shutdown();
+      implementationGps.shutdown();
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  /**
+   * Se rimosso tramite shutdown(), reinizializza il test provider.
+   */
+  @PluginMethod()
+  public void addTestProvider(PluginCall call) {
+    implementationGps = new MockLocation(LocationManager.GPS_PROVIDER, getContext());
+    implementationNetwork = new MockLocation(LocationManager.NETWORK_PROVIDER, getContext());
   }
 
 }
