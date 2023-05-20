@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Geolocation } from '@capacitor/geolocation';
 import { Platform } from '@ionic/angular';
+import BackgroundGeolocation from 'custom-plugins/background-geolocation/backgroundGeolocation';
 import MockLocation from 'custom-plugins/location-mocker/locationMocker';
 import { concatMap, from, timer } from 'rxjs';
 
@@ -16,10 +17,13 @@ export interface OffsetInterface {
   styleUrls: ['app.component.scss'],
 })
 export class AppComponent implements OnInit {
-  coordinateAttuali = {
-    lat: 0,
-    lon: 0
-  }
+  currentLocation: {
+    lat: number;
+    lon: number;
+  } = {
+      lat: 0,
+      lon: 0
+    };
 
   offsets: OffsetInterface[] = [
     { lat: 0, lon: 0, useRealPosition: true },
@@ -36,50 +40,129 @@ export class AppComponent implements OnInit {
   async ngOnInit() {
     await this.platform.ready()
 
-    // await Geolocation.watchPosition({ enableHighAccuracy: true, timeout: 12000 }, async (position) => {
-    //       if (position?.coords) {
-    //         this.coordinateAttuali = {
-    //           lat: position?.coords.latitude,
-    //           lon: position?.coords.longitude
-    //         }
-    //       }
-    //     });
+    this.rxjs_setMockCoordinatesConBackgroundGeolocation(this.offsets)
 
-    this.setMockCoordinates(this.offsets); // durata totale 8 secondi (8000ms)
-
-    // Dopo 10 secondi continua ad eseguire la funzione in loop
     setInterval(() => {
-      this.setMockCoordinates(this.offsets)
+      this.rxjs_setMockCoordinatesConBackgroundGeolocation(this.offsets)
     }, 10000)
   }
 
-  private setMockCoordinates(listaOffsets: OffsetInterface[]) {
+  // private async setMockCoordinates(listaOffsets: OffsetInterface[]) {
+  //   listaOffsets.map(
+  //     async (offset, i) => {
+  //       if (offset.useRealPosition) {
+  //         MockLocation.removeTestProvider();
+
+  //         const { coords } = await Geolocation.getCurrentPosition();
+
+  //         MockLocation.addTestProvider();
+
+  //         await MockLocation.setMockLocation({
+  //           lat: coords.latitude,
+  //           lon: coords.longitude
+  //         });
+
+  //       } else {
+  //         setTimeout(
+  //           async () => {
+  //             const { coords } = await Geolocation.getCurrentPosition();
+  //             const coordinate = { lat: coords.latitude, lon: coords.longitude };
+  //             this.settaMockLocationConOffset(coordinate, offset)
+  //           }, 2000 * i)
+  //       }
+  //     })
+  // }
+
+  // private rxjs_setMockCoordinates(listaOffsets: OffsetInterface[]) {
+  //   from(listaOffsets).pipe(
+  //     concatMap((offset, i) => timer(2000).pipe(
+  //       concatMap(async () => {
+  //         if (offset.useRealPosition) {
+  //           MockLocation.removeTestProvider();
+
+  //           const { coords } = await Geolocation.getCurrentPosition();
+
+  //           MockLocation.addTestProvider();
+
+  //           MockLocation.setMockLocation({
+  //             lat: coords.latitude,
+  //             lon: coords.longitude
+  //           });
+
+  //         } else {
+  //           const { coords } = await Geolocation.getCurrentPosition();
+  //           const coordinate = { lat: coords.latitude, lon: coords.longitude };
+  //           this.settaMockLocationConOffset(coordinate, offset)
+  //         }
+
+  //         if (i == listaOffsets.length - 1) {
+  //           this.rxjs_setMockCoordinates(listaOffsets);
+  //         }
+  //         // if (!offset.useRealPosition) {
+  //         //   return this.settaMockLocationDaOffset(offset)
+  //         // } else {
+  //         //   console.log('Rimuovo il test provider');
+  //         //   MockLocation.removeTestProvider();
+  //         //   console.log('Fetcho la vera posizione');
+  //         //   this.getRealPosition();
+  //         //   MockLocation.addTestProvider();
+  //         //   console.log('Setto la vera posizione come mock');
+
+  //         //   return this.settaMockLocationDaOffset(offset) // in questo caso l'offset è 0
+  //         // }
+  //       })
+  //     ))
+  //   ).subscribe(() => {
+  //   });
+  // }
+
+  private rxjs_setMockCoordinatesConBackgroundGeolocation(listaOffsets: OffsetInterface[]) {
     from(listaOffsets).pipe(
-      concatMap(offset => timer(2000).pipe(
-        concatMap(() => {
-          if (!offset.useRealPosition) {
-            return this.settaCoordinate(offset)
-          } else {
-            console.log('Rimuovo il test provider');
+      concatMap((offset, i) => timer(2000).pipe(
+        concatMap(async () => {
+          if (offset.useRealPosition) {
             MockLocation.removeTestProvider();
-            console.log('Fetcho la vera posizione');
-            this.getRealPosition();
-            MockLocation.addTestProvider();
-            console.log('Setto la vera posizione come mock');
-            return this.settaCoordinate(offset)
+
+            BackgroundGeolocation.addWatcher({ requestPermissions: false, stale: true }, (location) => {
+              let currentLocation = { longitude: location?.longitude, latitude: location?.latitude };
+              if (currentLocation.latitude && currentLocation.longitude) {
+                this.currentLocation = { lat: currentLocation.latitude, lon: currentLocation.longitude };
+                MockLocation.removeTestProvider();
+                MockLocation.addTestProvider();
+
+                MockLocation.setMockLocation({
+                  lat: this.currentLocation.lat,
+                  lon: this.currentLocation.lon
+                });
+              }
+            }
+            ).then((id) => {
+              setTimeout(() => BackgroundGeolocation.removeWatcher({ id }), 2000);
+            });
+          } else {
+            const coordinate = { lat: this.currentLocation.lat, lon: this.currentLocation.lon };
+            this.settaMockLocationConOffset(coordinate, offset)
           }
+
         })
       ))
     ).subscribe(() => {
     });
   }
 
-  private settaCoordinate(offset: any) {
-    const { lat: newOffsetLat, lon: newOffsetLon } = this.generaCoordinateConOffset(this.coordinateAttuali, offset);
+  private settaMockLocationConOffset(coordinate: { lat: number; lon: number; }, offset: any) {
+    const { lat: nuovaLatitudineConOffset, lon: nuovaLongitudineConOffset } = this.generaCoordinateConOffset(coordinate, offset);
 
     return MockLocation.setMockLocation({
-      lat: newOffsetLat,
-      lon: newOffsetLon
+      lat: nuovaLatitudineConOffset,
+      lon: nuovaLongitudineConOffset
+    });
+  }
+
+  private settaMockLocation(coordinate: any) {
+    return MockLocation.setMockLocation({
+      lat: coordinate.lat,
+      lon: coordinate.lon
     });
   }
 
@@ -105,13 +188,15 @@ export class AppComponent implements OnInit {
   }
 
   private async getRealPosition() {
-    const { coords } = await Geolocation.getCurrentPosition({ enableHighAccuracy: true, timeout: 2000 });
+    MockLocation.removeTestProvider();
 
-    this.coordinateAttuali = {
+    const { coords } = await Geolocation.getCurrentPosition();
+
+    this.currentLocation = {
       lat: coords.latitude,
       lon: coords.longitude
     }
 
-    console.log('Coordinate vere', this.coordinateAttuali);
+    MockLocation.addTestProvider();
   }
 }

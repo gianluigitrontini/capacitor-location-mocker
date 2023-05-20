@@ -1,7 +1,7 @@
 import { registerPlugin } from '@capacitor/core';
 
 export interface LocationMockerPlugin {
-    setMockLocation(opts: { lat: number; lon: number; }): Promise<void>;
+    setMockLocation(opts: { lat: number | undefined; lon: number | undefined }): Promise<void>;
     removeTestProvider(): Promise<void>;
     addTestProvider(): Promise<void>;
 }
