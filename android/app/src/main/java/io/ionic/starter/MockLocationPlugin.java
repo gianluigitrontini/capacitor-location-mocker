@@ -60,6 +60,9 @@ public class MockLocationPlugin extends Plugin {
     } catch (Exception e) {
       e.printStackTrace();
     }
+      JSObject ret = new JSObject();
+      ret.put("data", "TestProvider removed");
+      call.resolve(ret);
   }
 
   /**
@@ -69,6 +72,10 @@ public class MockLocationPlugin extends Plugin {
   public void addTestProvider(PluginCall call) {
     implementationGps = new MockLocation(LocationManager.GPS_PROVIDER, getContext());
     implementationNetwork = new MockLocation(LocationManager.NETWORK_PROVIDER, getContext());
+
+    JSObject ret = new JSObject();
+    ret.put("data", "TestProvider removed");
+    call.resolve(ret);
   }
 
 }
