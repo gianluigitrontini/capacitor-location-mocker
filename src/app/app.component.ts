@@ -41,19 +41,11 @@ export class AppComponent implements OnInit {
       lon: 0
     };
 
-  mockedLocation: {
-    lat: number;
-    lon: number;
-  } = {
-      lat: 0,
-      lon: 0
-    };
-
   /**
-   * Offset in km.
-   * @default 5
+   * Offset in metri.
+   * @default 10
    */
-  offset = 0.01;
+  offset = 10;
 
   constructor(
     private platform: Platform
@@ -107,32 +99,11 @@ export class AppComponent implements OnInit {
     ).subscribe();
   }
 
-  private old_generaCoordinateConOffset(actualCoordinates: { lat: number; lon: number; }, offsetInMeters: { lat: number, lon: number; }) {
-    //Position, decimal degrees
-
-    //Earth’s radius, sphere
-    const earthRadius = 6378137
-
-    //offsets in meters
-    const dn = offsetInMeters.lon
-    const de = offsetInMeters.lat
-
-    //Coordinate offsets in radians
-    const dLat = dn / earthRadius
-    const dLon = de / (earthRadius * Math.cos(Math.PI * actualCoordinates.lat / 180))
-
-    //OffsetPosition, decimal degrees
-    let lat = actualCoordinates.lat + dLat * 180 / Math.PI
-    let lon = actualCoordinates.lon + dLon * 180 / Math.PI
-
-    return { lat, lon }
-  }
-
   moveToNorth({ initialPosition, offset = this.offset }: MoveToInterface) {
     console.log('3 - Muovo nord')
     const r_earth = 6378;
     const pi = Math.PI;
-    const new_latitude = initialPosition.lat + (offset / r_earth) * (180 / pi);
+    const new_latitude = initialPosition.lat + ((offset / 1000) / r_earth) * (180 / pi);
 
     return { lat: new_latitude, lon: initialPosition.lon }
   }
@@ -142,7 +113,7 @@ export class AppComponent implements OnInit {
 
     const r_earth = 6378;
     const pi = Math.PI;
-    const new_latitude = initialPosition.lat - (offset / r_earth) * (180 / pi);
+    const new_latitude = initialPosition.lat - ((offset / 1000) / r_earth) * (180 / pi);
 
     return { lat: new_latitude, lon: initialPosition.lon }
   }
@@ -152,7 +123,7 @@ export class AppComponent implements OnInit {
 
     const r_earth = 6378;
     const pi = Math.PI;
-    const new_longitude = initialPosition.lon + (offset / r_earth) * (180 / pi);
+    const new_longitude = initialPosition.lon + ((offset / 1000) / r_earth) * (180 / pi);
 
     return { lat: initialPosition.lat, lon: new_longitude }
   }
@@ -162,7 +133,7 @@ export class AppComponent implements OnInit {
 
     const r_earth = 6378;
     const pi = Math.PI;
-    const new_longitude = initialPosition.lon - (offset / r_earth) * (180 / pi);
+    const new_longitude = initialPosition.lon - ((offset / 1000) / r_earth) * (180 / pi);
 
     return { lat: initialPosition.lat, lon: new_longitude }
   }
